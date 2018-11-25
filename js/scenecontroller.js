@@ -106,12 +106,12 @@ SceneController.prototype.setupGUI = function()
     this.atXValue = cameraGui.add(this.cameraParams,'atX',-10,10);
     this.atYValue = cameraGui.add(this.cameraParams,'atY',-10,10);
     this.atZValue = cameraGui.add(this.cameraParams,'atZ',-10,10);
-    this.eyeXValue = cameraGui.add(this.cameraParams,'eyeX',-10,10).step(1);
-    this.eyeYValue = cameraGui.add(this.cameraParams,'eyeY',-10,10).step(1);
-    this.eyeZValue = cameraGui.add(this.cameraParams,'eyeZ',-30,30).step(1);
-    this.upXValue = cameraGui.add(this.cameraParams,'upX',-10,10).step(1);
-    this.upYValue = cameraGui.add(this.cameraParams,'upY',-10,10).step(1);
-    this.upZValue = cameraGui.add(this.cameraParams,'upZ',-10,10).step(1);
+    this.eyeXValue = cameraGui.add(this.cameraParams,'eyeX',-10,10);
+    this.eyeYValue = cameraGui.add(this.cameraParams,'eyeY',-10,10);
+    this.eyeZValue = cameraGui.add(this.cameraParams,'eyeZ',-30,30);
+    this.upXValue = cameraGui.add(this.cameraParams,'upX',-10,10);
+    this.upYValue = cameraGui.add(this.cameraParams,'upY',-10,10);
+    this.upZValue = cameraGui.add(this.cameraParams,'upZ',-10,10);
 
     // this.controller = this.gui.add(text, 'maxSize', 0, 10);
 
@@ -141,7 +141,9 @@ SceneController.prototype.setupCamera = function()
     // viewing camera
     this.camera = new THREE.PerspectiveCamera(fov, aspect, 0.1 * near, 100 * far);
     this.camera.position.z = 60;
-    this.camera.position.x = 20;
+    // this.camera.position.x = 20;
+    this.leftCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1 * near, 100 * far);
+    this.leftCamera.position.z = 50;
 
     this.perspectiveCamera = new THREE.PerspectiveCamera( fov, aspect, near, far);
     this.setCameraView();
@@ -151,6 +153,7 @@ SceneController.prototype.setupCamera = function()
     this.perspectiveCamera.lookAt(this.at);
 
     this.perspectiveCameraHelper = new THREE.CameraHelper(this.perspectiveCamera);
+    this.perspectiveCameraHelper.matrixAutoUpdate = true;
     this.scene.add(this.perspectiveCameraHelper);
 
     this.screenScene.add(this.perspectiveCamera);
@@ -167,7 +170,7 @@ SceneController.prototype.setupCamera = function()
 
 SceneController.prototype.setupControls = function()
 {
-    this.controls = new THREE.OrbitControls( this.camera );
+    this.controls = new THREE.OrbitControls( this.leftCamera );
     this.controls.enableDamping = true;
     this.controls.enableZoom = true;
     this.controls.enableKeys = false;
@@ -251,90 +254,115 @@ SceneController.prototype.setupLight = function()
 
 SceneController.prototype.adjustCamera = function()
 {
-    console.log(this.perspectiveCamera);
     const self = this;
 
     this.fovValue.onChange(function(value) {
         self.perspectiveCamera.fov = value;
         self.perspectiveCamera.updateProjectionMatrix();
+        self.perspectiveCameraHelper.update();
+        self.camera.fov = value;
+        self.camera.updateProjectionMatrix();
+        self.camera.lookAt(self.at);
     });
 
     this.atXValue.onChange(function(value){
         self.at.x = value;
         self.perspectiveCamera.lookAt(self.at);
+        self.camera.lookAt(self.at);
     });
 
     this.atYValue.onChange(function(value){
         self.at.y = value;
         self.perspectiveCamera.lookAt(self.at);
+        self.camera.lookAt(self.at);
     });
 
     this.atZValue.onChange(function(value){
         self.at.z = value;
         self.perspectiveCamera.lookAt(self.at);
+        self.camera.lookAt(self.at);
     });
 
     this.eyeXValue.onChange(function(value){
         self.eye.x = value;
         self.perspectiveCamera.position.copy(self.eye);
+        self.perspectiveCamera.lookAt(self.at);
+        self.camera.position.x = value;
+        self.camera.lookAt(self.at);
     });
 
     this.eyeYValue.onChange(function(value){
         self.eye.y = value;
         self.perspectiveCamera.position.copy(self.eye);
+        self.perspectiveCamera.lookAt(self.at);
+        self.camera.position.y = value;
+        self.camera.lookAt(self.at);
     });
 
     this.eyeZValue.onChange(function(value){
         self.eye.z = value;
         self.perspectiveCamera.position.copy(self.eye);
+        self.perspectiveCamera.lookAt(self.at);
+        self.camera.position.z = value;
+        self.camera.lookAt(self.at);
     });
 
     this.upXValue.onChange(function(value){
         self.up.x = value;
         self.perspectiveCamera.up.copy(self.up);
         self.perspectiveCamera.updateProjectionMatrix();
+        self.perspectiveCamera.lookAt(self.at);
+        self.camera.up.copy(self.up);
+        self.camera.updateProjectionMatrix();
+        self.camera.lookAt(self.at);
     });
 
     this.upYValue.onChange(function(value){
         self.up.y = value;
         self.perspectiveCamera.up.copy(self.up);
         self.perspectiveCamera.updateProjectionMatrix();
+        self.perspectiveCamera.lookAt(self.at);
+        self.camera.up.copy(self.up);
+        self.camera.updateProjectionMatrix();
+        self.camera.lookAt(self.at);
     });
 
     this.upZValue.onChange(function(value){
         self.up.z = value;
         self.perspectiveCamera.up.copy(self.up);
         self.perspectiveCamera.updateProjectionMatrix();
+        self.perspectiveCamera.lookAt(self.at);
+        self.camera.up.copy(self.up);
+        self.camera.updateProjectionMatrix();
+        self.camera.lookAt(self.at);
     });
 
     this.nearValue.onChange(function(value){
         self.perspectiveCamera.near = value;
         self.perspectiveCamera.updateProjectionMatrix();
+        self.perspectiveCameraHelper.update();
+        self.camera.near = value;
+        self.camera.updateProjectionMatrix();
     });
 
     this.farValue.onChange(function(value){
         self.perspectiveCamera.far = value;
         self.perspectiveCamera.updateProjectionMatrix();
+        self.perspectiveCameraHelper.update();
+        self.camera.far = value;
+        self.camera.updateProjectionMatrix();
     });
 
     this.aspectRatioValue.onChange(function(value){
         self.perspectiveCamera.aspect = value;
         self.perspectiveCamera.updateProjectionMatrix();
+        self.perspectiveCameraHelper.update();
+        self.camera.aspect = value;
+        self.camera.updateProjectionMatrix();
     });
-
-    // function change(value){
-    //     this.change2(value);
-    // }
-    // console.log(this.scene.children[0].camera.fov);
-    // console.log(this.screenScene.children[0].fov);
-    // this.perspectiveCamera.fov = 20;
-    // console.log(this.perspectiveCamera);
-    // this.perspectiveCamera.updateProjectionMatrix();
-
-    // console.log(this.camera.fov);
-    // this.camera.fov = 120;
-    // this.camera.updateProjectionMatrix();
-    // console.log(this.camera.fov);
+    
+    console.log(this.perspectiveCamera);
+    console.log(this.camera);
 };
 
 SceneController.prototype.adjustModel = function()
@@ -348,7 +376,7 @@ SceneController.prototype.adjustClipView = function()
 SceneController.prototype.render = function()
 {
     this.axes.visible = this.otherParams.sceneAxes;
-    this.renderer.render( this.scene, this.camera);
+    this.renderer.render( this.scene, this.leftCamera);
 
     this.clipAxes.visible = this.otherParams.clipAxes;
     this.clipRenderer.render(this.clipScene, this.clipCamera);
