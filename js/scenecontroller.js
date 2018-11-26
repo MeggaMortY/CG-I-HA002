@@ -47,6 +47,7 @@ SceneController.prototype.setup = function()
     this.setupLight();
     this.setupGeometry();
     this.adjustCamera();
+    this.adjustModel();
     this.animate();
 };
 
@@ -90,16 +91,16 @@ SceneController.prototype.setupGUI = function()
     };
 
     var modelGui = this.gui.addFolder('model manipulation');
-    modelGui.add( this.modelParams, "transx", -20.0, 20.0 ).name("X translation");
-    modelGui.add( this.modelParams, "transy", -20.0, 20.0 ).name("Y translation");
-    modelGui.add( this.modelParams, "transz", -20.0, 20.0 ).name("Z translation");
-    modelGui.add( this.modelParams, "rotx", 0, 360.0 ).name("X rotation");
-    modelGui.add( this.modelParams, "roty", 0, 360.0 ).name("Y rotation");
-    modelGui.add( this.modelParams, "rotz", 0, 360.0 ).name("Z rotation");
-    modelGui.add( this.modelParams, "scale", 0.1, 2.0 ).name("Scale");
+    this.transXValue = modelGui.add( this.modelParams, "transx", -20.0, 20.0 ).name("X translation");
+    this.transYValue = modelGui.add( this.modelParams, "transy", -20.0, 20.0 ).name("Y translation");
+    this.transZValue = modelGui.add( this.modelParams, "transz", -20.0, 20.0 ).name("Z translation");
+    this.rotXValue = modelGui.add( this.modelParams, "rotx", 0, 360.0 ).name("X rotation");
+    this.rotYValue = modelGui.add( this.modelParams, "roty", 0, 360.0 ).name("Y rotation");
+    this.rotZValue = modelGui.add( this.modelParams, "rotz", 0, 360.0 ).name("Z rotation");
+    this.scaleValue = modelGui.add( this.modelParams, "scale", 0.1, 2.0 ).name("Scale");
 
     var cameraGui = this.gui.addFolder('camera');
-    this.fovValue = cameraGui.add(this.cameraParams,'fov',1,179).step(1);
+    this.fovValue = cameraGui.add(this.cameraParams,'fov',1,179);
     this.aspectRatioValue = cameraGui.add(this.cameraParams,'aspectRatio',0.1,10);
     this.nearValue = cameraGui.add(this.cameraParams,'near',0.01,50);
     this.farValue = cameraGui.add(this.cameraParams,'far',0.01,50);
@@ -360,13 +361,67 @@ SceneController.prototype.adjustCamera = function()
         self.camera.aspect = value;
         self.camera.updateProjectionMatrix();
     });
-    
+
     console.log(this.perspectiveCamera);
     console.log(this.camera);
 };
 
+SceneController.prototype.colorMesh = function (mesh, color) {
+    mesh.material = new THREE.MeshLambertMaterial( {
+        color: color,  // CSS color names can be used!
+    } );
+};
+
+SceneController.prototype.traverseSceneAndGrabMeshes = function(scene) {
+    scene.traverse( function( node ) {
+
+        if ( node instanceof THREE.Mesh ) {
+            meshes.push(node);
+        }
+
+    } );
+};
+
+
 SceneController.prototype.adjustModel = function()
 {
+    const self = this;
+
+    this.transXValue.onChange(function(value){
+        self.scene.children[5].position.x = value;
+        self.screenScene.children[1].position.x = value;
+    });
+
+    this.transYValue.onChange(function(value){
+        self.scene.children[5].position.y = value;
+        self.screenScene.children[1].position.y = value;
+    });
+
+    this.transZValue.onChange(function(value){
+        self.scene.children[5].position.z = value;
+        self.screenScene.children[1].position.z = value;
+    });
+
+    this.rotXValue.onChange(function(value){
+        self.scene.children[5].rotation.x = degToRad(value);
+        self.screenScene.children[1].rotation.x = degToRad(value);
+    });
+
+    this.rotYValue.onChange(function(value){
+        self.scene.children[5].rotation.y = degToRad(value);
+        self.screenScene.children[1].rotation.y = degToRad(value);
+    });
+
+    this.rotZValue.onChange(function(value){
+        self.scene.children[5].rotation.z = degToRad(value);
+        self.screenScene.children[1].rotation.z = degToRad(value);
+    });
+
+    this.scaleValue.onChange(function(value){
+        var scaleVector = new THREE.Vector3(value, value, value);
+        self.scene.children[5].scale.copy(scaleVector);
+        self.screenScene.children[1].scale.copy(scaleVector);
+    });
 };
 
 SceneController.prototype.adjustClipView = function()
