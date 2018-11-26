@@ -119,6 +119,7 @@ SceneController.prototype.setupGUI = function()
     this.gui.add( this.otherParams, "sceneAxes" ).name("World axes");
     this.gui.add( this.otherParams, "clipAxes" ).name("Clipping axes");
     this.gui.add( this.otherParams, "enableSceneOrbit" ).name("Scene orbit control");
+    this.gui.add( this.otherParams, "enableClipOrbit" ).name("Clip orbit control");
 
     this.at = new THREE.Vector3();
     this.eye = new THREE.Vector3();
@@ -141,10 +142,10 @@ SceneController.prototype.setupCamera = function()
 
     // viewing camera
     this.camera = new THREE.PerspectiveCamera(fov, aspect, 0.1 * near, 100 * far);
-    this.camera.position.z = 60;
+    this.camera.position.z = 50;
     // this.camera.position.x = 20;
     this.leftCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1 * near, 100 * far);
-    this.leftCamera.position.z = 50;
+    this.leftCamera.position.z = 70;
 
     this.perspectiveCamera = new THREE.PerspectiveCamera( fov, aspect, near, far);
     this.setCameraView();
@@ -154,7 +155,6 @@ SceneController.prototype.setupCamera = function()
     this.perspectiveCamera.lookAt(this.at);
 
     this.perspectiveCameraHelper = new THREE.CameraHelper(this.perspectiveCamera);
-    this.perspectiveCameraHelper.matrixAutoUpdate = true;
     this.scene.add(this.perspectiveCameraHelper);
 
     this.screenScene.add(this.perspectiveCamera);
@@ -177,6 +177,13 @@ SceneController.prototype.setupControls = function()
     this.controls.enableKeys = false;
     //bind? --> https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
     this.controls.addEventListener( 'change', this.render.bind(this) );
+
+    this.controlsClip = new THREE.OrbitControls( this.clipCamera );
+    this.controlsClip.enableDamping = true;
+    this.controlsClip.enableZoom = true;
+    this.controlsClip.enableKeys = false;
+    //bind? --> https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
+    this.controlsClip.addEventListener( 'change', this.render.bind(this) );
 
 };
 
@@ -449,5 +456,7 @@ SceneController.prototype.animate = function()
 
     this.controls.enabled = this.otherParams.enableSceneOrbit;
     this.controls.update();
+    this.controlsClip.enabled = this.otherParams.enableClipOrbit;
+    this.controlsClip.update();
     this.render()
 };
