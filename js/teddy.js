@@ -212,3 +212,12 @@ function createTeddyBear(params) {
     }
     return bear;
 }
+
+function createBox(geo_x, geo_y, geo_z){
+    var geometry = new THREE.BoxGeometry(geo_x, geo_y, geo_z);
+    var material = new THREE.MeshLambertMaterial( {
+        color: "blue",
+    } );
+    var joint = new THREE.Mesh( geometry, material );
+    return joint;
+}

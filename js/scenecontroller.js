@@ -48,12 +48,39 @@ SceneController.prototype.setup = function()
     this.setupGeometry();
     this.adjustCamera();
     this.adjustModel();
+    this.clipScene.children[6].position.z = 2.5;
+    this.clipScene.children[6].position.x = 1;
+    console.log(this.clipScene);
+    // console.log(this.clipScene.children[0].matrixWorld);
+    // console.log(this.clipScene.children[0].matrixWorldInverse);
+    console.log(this.clipScene.children[6]);
+    console.log((this.clipScene.children[6].matrixWorld));
+    var objectWorldCoordinates = this.clipScene.children[6].matrixWorld;
+    // objectWorldCoordinates.geometry.verticesNeedUpdate = true;
+    // for ( var i = 0, iLen = 8; i < iLen; i++ ) {
+    //     objectWorldCoordinates.geometry.vertices[i].project(this.clipCamera);
+    // }
+
+
     this.animate();
 };
 
-var FizzyText = function() {
-    this.maxSize = 6.4;
-};
+// this.boxPosition = new THREE.Vector3(1, 1, 3);
+// this.clipScene.children[6].position.copy(this.boxPosition);
+// this.boxVertices = this.clipScene.children[6].geometry.vertices;
+// for ( var i = 0, iLen = this.boxVertices.length; i < iLen; i++ ) {
+//     var vector = new THREE.Vector3( this.boxVertices[i] );
+//
+//     // model to world
+//     var modelMat = this.box.matrixWorld;
+//     vector.applyMatrix4(modelMat);
+//
+//     // world to view and view to NDC
+//     vector.project(this.camera);
+//
+//
+//     console.log(vector);
+// }
 
 SceneController.prototype.setupGUI = function()
 {
@@ -162,11 +189,13 @@ SceneController.prototype.setupCamera = function()
     var frustumSize = 3;
     this.clipCamera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2,
         frustumSize / 2, frustumSize / - 2, near, far);
-    this.clipCamera.position.x = - 3;
-    this.clipCamera.position.y = 3;
+    this.clipCamera.position.x = - 4;
+    this.clipCamera.position.y = 5;
     this.clipCamera.position.z = 10;
     this.clipCamera.lookAt(this.clipScene.position);
     this.clipScene.add(this.clipCamera);
+    // this.ndcVolume = new THREE.OrthographicCamera ( -1, 1, 1, -1, -1, 1);
+    // this.clipScene.add(this.ndcVolume);
 };
 
 SceneController.prototype.setupControls = function()
@@ -227,7 +256,7 @@ SceneController.prototype.setupGeometry = function()
     this.axes.position.set(0, 0, 0);
     this.scene.add(this.axes);
 
-    this.clipAxes = buildAxes(15, left_hand=true);
+    this.clipAxes = buildAxes(1, left_hand=true);
     this.clipAxes.position.set(0, 0, -1);
     this.clipScene.add(this.clipAxes);
 
@@ -240,6 +269,10 @@ SceneController.prototype.setupGeometry = function()
     var cubeMat = new THREE.LineBasicMaterial( { color: 0xff8010, linewidth: 2} );
     var wireframe = new THREE.LineSegments( geo, cubeMat);
     this.clipScene.add( wireframe );
+    // this.bear2 = createTeddyBear(this.params);
+    // this.clipScene.add( this.bear2);
+    this.box = createBox(2, 2, 2);
+    this.clipScene.add(this.box);
 
     this.bear3 = createTeddyBear(this.params);
     this.screenScene.add(this.bear3);
@@ -257,6 +290,18 @@ SceneController.prototype.setupLight = function()
     this.scene.add(light2);
 
     this.scene.add( new THREE.AmbientLight(0x999999) );
+
+
+    // https://threejs.org/docs/#api/lights/PointLight
+    var lightClip = new THREE.PointLight( 0xffffcc, 1, 100 );
+    lightClip.position.set( 10, 30, 15 );
+    this.clipScene.add(lightClip);
+
+    var lightClip2 = new THREE.PointLight( 0xffffcc, 1, 100 );
+    lightClip2.position.set( 10, -30, -15 );
+    this.clipScene.add(lightClip2);
+
+    this.clipScene.add( new THREE.AmbientLight(0x999999) );
 };
 
 
@@ -368,9 +413,6 @@ SceneController.prototype.adjustCamera = function()
         self.camera.aspect = value;
         self.camera.updateProjectionMatrix();
     });
-
-    console.log(this.perspectiveCamera);
-    console.log(this.camera);
 };
 
 SceneController.prototype.colorMesh = function (mesh, color) {
