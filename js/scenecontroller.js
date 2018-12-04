@@ -48,39 +48,9 @@ SceneController.prototype.setup = function()
     this.setupGeometry();
     this.adjustCamera();
     this.adjustModel();
-    this.clipScene.children[6].position.z = 2.5;
-    this.clipScene.children[6].position.x = 1;
-    console.log(this.clipScene);
-    // console.log(this.clipScene.children[0].matrixWorld);
-    // console.log(this.clipScene.children[0].matrixWorldInverse);
-    console.log(this.clipScene.children[6]);
-    console.log((this.clipScene.children[6].matrixWorld));
-    var objectWorldCoordinates = this.clipScene.children[6].matrixWorld;
-    // objectWorldCoordinates.geometry.verticesNeedUpdate = true;
-    // for ( var i = 0, iLen = 8; i < iLen; i++ ) {
-    //     objectWorldCoordinates.geometry.vertices[i].project(this.clipCamera);
-    // }
-
 
     this.animate();
 };
-
-// this.boxPosition = new THREE.Vector3(1, 1, 3);
-// this.clipScene.children[6].position.copy(this.boxPosition);
-// this.boxVertices = this.clipScene.children[6].geometry.vertices;
-// for ( var i = 0, iLen = this.boxVertices.length; i < iLen; i++ ) {
-//     var vector = new THREE.Vector3( this.boxVertices[i] );
-//
-//     // model to world
-//     var modelMat = this.box.matrixWorld;
-//     vector.applyMatrix4(modelMat);
-//
-//     // world to view and view to NDC
-//     vector.project(this.camera);
-//
-//
-//     console.log(vector);
-// }
 
 SceneController.prototype.setupGUI = function()
 {
@@ -189,13 +159,11 @@ SceneController.prototype.setupCamera = function()
     var frustumSize = 3;
     this.clipCamera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2,
         frustumSize / 2, frustumSize / - 2, near, far);
-    this.clipCamera.position.x = - 4;
-    this.clipCamera.position.y = 5;
+    this.clipCamera.position.x = - 3;
+    this.clipCamera.position.y = 3;
     this.clipCamera.position.z = 10;
     this.clipCamera.lookAt(this.clipScene.position);
     this.clipScene.add(this.clipCamera);
-    // this.ndcVolume = new THREE.OrthographicCamera ( -1, 1, 1, -1, -1, 1);
-    // this.clipScene.add(this.ndcVolume);
 };
 
 SceneController.prototype.setupControls = function()
@@ -269,13 +237,53 @@ SceneController.prototype.setupGeometry = function()
     var cubeMat = new THREE.LineBasicMaterial( { color: 0xff8010, linewidth: 2} );
     var wireframe = new THREE.LineSegments( geo, cubeMat);
     this.clipScene.add( wireframe );
-    // this.bear2 = createTeddyBear(this.params);
-    // this.clipScene.add( this.bear2);
-    this.box = createBox(2, 2, 2);
-    this.clipScene.add(this.box);
 
     this.bear3 = createTeddyBear(this.params);
     this.screenScene.add(this.bear3);
+};
+
+SceneController.prototype.convertToNDC = function () {
+    const clipScene = this.clipScene;
+    clipScene.remove(this.bear2);
+    this.bear2 = createTeddyBear(this.params);
+    this.bear2.updateMatrix();
+    this.bear2.updateMatrixWorld();
+    const perspCamera = this.perspectiveCamera;
+
+    this.bear2.traverse( function( node ) {
+        if ( node instanceof THREE.Mesh ) {
+            node.updateMatrix();
+            node.updateMatrixWorld();
+            node.geometry.verticesNeedUpdate = true;
+            var verticesCount = node.geometry.vertices.length;
+            for ( var i = 0, iLen = verticesCount; i < iLen; i++ ) {
+                node.geometry.vertices[i].applyMatrix4(node.matrixWorld);
+                node.geometry.vertices[i].applyMatrix4(perspCamera.matrixWorldInverse);
+                node.geometry.vertices[i].applyMatrix4(perspCamera.projectionMatrix);
+                node.geometry.vertices[i].z = - node.geometry.vertices[i].z;
+            }
+        }
+    } );
+
+    this.bear2.traverse( function( node ) {
+        node.position.set(0, 0, 0);
+        node.rotation.set(0, 0, 0);
+        node.scale.set(1, 1, 1);
+        node.updateMatrix();
+        node.updateMatrixWorld();
+    });
+
+    var scaleVector = new THREE.Vector3(clipScale, clipScale, clipScale);
+    this.bear2.scale.copy(scaleVector);
+    this.bear2.position.x = clipTransX;
+    this.bear2.position.y = clipTransY;
+    this.bear2.position.z = clipTransZ;
+    this.bear2.rotation.x = clipRotX;
+    this.bear2.rotation.y = clipRotY;
+    this.bear2.rotation.z = clipRotZ;
+    this.bear2.updateMatrix();
+    this.bear2.updateMatrixWorld();
+    clipScene.add(this.bear2);
 };
 
 SceneController.prototype.setupLight = function()
@@ -431,6 +439,13 @@ SceneController.prototype.traverseSceneAndGrabMeshes = function(scene) {
     } );
 };
 
+var clipScale = 1;
+var clipTransX = 0;
+var clipTransY = 0;
+var clipTransZ = 0;
+var clipRotX = 0;
+var clipRotY = 0;
+var clipRotZ = 0;
 
 SceneController.prototype.adjustModel = function()
 {
@@ -439,37 +454,44 @@ SceneController.prototype.adjustModel = function()
     this.transXValue.onChange(function(value){
         self.scene.children[5].position.x = value;
         self.screenScene.children[1].position.x = value;
+        clipTransX = value;
     });
 
     this.transYValue.onChange(function(value){
         self.scene.children[5].position.y = value;
         self.screenScene.children[1].position.y = value;
+        clipTransY = value;
     });
 
     this.transZValue.onChange(function(value){
         self.scene.children[5].position.z = value;
         self.screenScene.children[1].position.z = value;
+        clipTransZ = value;
     });
 
     this.rotXValue.onChange(function(value){
         self.scene.children[5].rotation.x = degToRad(value);
         self.screenScene.children[1].rotation.x = degToRad(value);
+        clipRotX = degToRad(value);
     });
 
     this.rotYValue.onChange(function(value){
         self.scene.children[5].rotation.y = degToRad(value);
         self.screenScene.children[1].rotation.y = degToRad(value);
+        clipRotY = degToRad(value);
     });
 
     this.rotZValue.onChange(function(value){
         self.scene.children[5].rotation.z = degToRad(value);
         self.screenScene.children[1].rotation.z = degToRad(value);
+        clipRotZ = degToRad(value);
     });
 
     this.scaleValue.onChange(function(value){
         var scaleVector = new THREE.Vector3(value, value, value);
         self.scene.children[5].scale.copy(scaleVector);
         self.screenScene.children[1].scale.copy(scaleVector);
+        clipScale = value;
     });
 };
 
@@ -483,8 +505,8 @@ SceneController.prototype.render = function()
     this.renderer.render( this.scene, this.leftCamera);
 
     this.clipAxes.visible = this.otherParams.clipAxes;
+    this.convertToNDC();
     this.clipRenderer.render(this.clipScene, this.clipCamera);
-
     this.screenRenderer.render( this.screenScene, this.camera);
 
     this.stats.update();
