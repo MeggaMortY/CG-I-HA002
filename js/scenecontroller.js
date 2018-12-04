@@ -231,10 +231,17 @@ SceneController.prototype.setupGeometry = function()
     this.bear = createTeddyBear(this.params);
     this.scene.add(this.bear);
 
+    this.globalPlaneRight = new THREE.Plane( new THREE.Vector3( - 1, 0, 0 ), 1.01 );
+    this.globalPlaneLeft = new THREE.Plane( new THREE.Vector3( 1, 0, 0 ), 1.01 );
+    this.globalPlaneUp = new THREE.Plane( new THREE.Vector3( 0, -1, 0 ), 1.01 );
+    this.globalPlaneDown = new THREE.Plane( new THREE.Vector3( 0, 1, 0 ), 1.01 );
+    this.globalPlaneBack = new THREE.Plane( new THREE.Vector3( 0, 0, 1 ), 1.01 );
+    this.globalPlaneFront = new THREE.Plane( new THREE.Vector3( 0, 0, -1 ), 1.01 );
+
     // Box
     var geometry = new THREE.CubeGeometry( 2, 2, 2);
     var geo = new THREE.EdgesGeometry( geometry );
-    var cubeMat = new THREE.LineBasicMaterial( { color: 0xff8010, linewidth: 2} );
+    var cubeMat = new THREE.LineBasicMaterial( {color: 0xff8010, linewidth: 2,} );
     var wireframe = new THREE.LineSegments( geo, cubeMat);
     this.clipScene.add( wireframe );
 
@@ -454,19 +461,19 @@ SceneController.prototype.adjustModel = function()
     this.transXValue.onChange(function(value){
         self.scene.children[5].position.x = value;
         self.screenScene.children[1].position.x = value;
-        clipTransX = value;
+        clipTransX = value / 10;
     });
 
     this.transYValue.onChange(function(value){
         self.scene.children[5].position.y = value;
         self.screenScene.children[1].position.y = value;
-        clipTransY = value;
+        clipTransY = value / 10;
     });
 
     this.transZValue.onChange(function(value){
         self.scene.children[5].position.z = value;
         self.screenScene.children[1].position.z = value;
-        clipTransZ = value;
+        clipTransZ = value / 10;
     });
 
     this.rotXValue.onChange(function(value){
@@ -505,6 +512,8 @@ SceneController.prototype.render = function()
     this.renderer.render( this.scene, this.leftCamera);
 
     this.clipAxes.visible = this.otherParams.clipAxes;
+    this.clipRenderer.clippingPlanes = [ this.globalPlaneRight, this.globalPlaneLeft, this.globalPlaneUp,
+        this.globalPlaneDown, this.globalPlaneFront, this.globalPlaneBack ];
     this.convertToNDC();
     this.clipRenderer.render(this.clipScene, this.clipCamera);
     this.screenRenderer.render( this.screenScene, this.camera);
